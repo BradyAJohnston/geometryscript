@@ -8,7 +8,17 @@ from .state import State
 from .types import *
 from .static.input_group import InputGroup
 from .static.curve import Curve
-from ..absolute_path import absolute_path
+from pathlib import Path
+
+
+def absolute_path(component):
+    """
+    Returns the absolute path to a file in the addon directory.
+
+    Alternative to `os.abspath` that works the same on macOS and Windows.
+    """
+    return Path(__file__).parent / component
+
 
 # Constants
 SOCKET_COLORS = {

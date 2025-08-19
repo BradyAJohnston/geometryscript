@@ -15,4 +15,3 @@ import bpy
 
 from .api.tree import *
 from .preferences import GeometryScriptPreferences
-from .absolute_path import absolute_path
