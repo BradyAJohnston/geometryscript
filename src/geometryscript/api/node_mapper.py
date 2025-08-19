@@ -11,7 +11,7 @@ from .static.curve import Curve
 from pathlib import Path
 
 
-def absolute_path(component):
+def absolute_path(component: Path | str) -> Path:
     """
     Returns the absolute path to a file in the addon directory.
 
@@ -455,16 +455,19 @@ class Type:
 
     # Add static API content
     static_path = absolute_path("api/static")
-    for path in os.listdir(static_path):
-        if os.path.splitext(path)[-1] != ".py":
+    static_path.mkdir(exist_ok=True, parents=True)
+    for path in static_path.glob("*.py"):
+        if path.suffix != ".py":
             continue
-        with open(os.path.join(static_path, path), "r") as static_api:
-            contents += f"\n\n# {path}\n{static_api.read()}"
+        with open(path, "r") as static_api:
+            contents += f"\n\n# {path.name}\n{static_api.read()}"
 
     # Write both .pyi and .py files
-    with open(absolute_path("typeshed/geometry_script.pyi"), "w") as fpyi:
+    typeshed_path = absolute_path("typeshed")
+    typeshed_path.mkdir(exist_ok=True, parents=True)
+    with open(typeshed_path / "geometry_script.pyi", "w") as fpyi:
         fpyi.write(contents)
-    with open(absolute_path("typeshed/geometry_script.py"), "w") as fpy:
+    with open(typeshed_path / "geometry_script.py", "w") as fpy:
         fpy.write(contents)
 
 
