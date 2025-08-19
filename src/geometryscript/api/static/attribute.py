@@ -44,7 +44,8 @@ class Attribute:
         """
         Creates a "Named Attribute" node with the correct arguments passed, and returns the "Attribute" socket.
         """
-        from geometry_script import named_attribute, Type
+        from ... import named_attribute
+        from ...api.types import Type
         result = named_attribute(data_type=self.data_type, name=self.name, *args, **kwargs)
         # Handle Blender 3.5+, which includes an `exists` result.
         if isinstance(result, Type):
@@ -58,14 +59,14 @@ class Attribute:
 
         > Only available in Blender 3.5+
         """
-        from geometry_script import named_attribute
+        from ... import named_attribute
         return named_attribute(data_type=self.data_type, name=self.name, *args, **kwargs).exists
     
     def store(self, geometry: 'Geometry', value, *args, **kwargs) -> 'Geometry':
         """
         Creates a "Store Named Attribute" node with the correct arguments passed, and returns the modified `Geometry`.
         """
-        from geometry_script import store_named_attribute
+        from ... import store_named_attribute
         if 'domain' not in kwargs:
             kwargs['domain'] = self.domain
         return store_named_attribute(

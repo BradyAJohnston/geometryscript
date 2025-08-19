@@ -4,7 +4,7 @@ import nodeitems_utils
 import enum
 from .state import State
 from .static.sample_mode import SampleMode
-import geometry_script
+# Avoid circular import - will be imported later when needed
 
 def map_case_name(i):
     return ('_' if not i.identifier[0].isalpha() else '') + i.identifier.replace(' ', '_').upper()
@@ -72,9 +72,11 @@ class Type(metaclass=_TypeMeta):
             vector_or_value =  (other, self) if reverse else (self, other)
 
         if self._socket.type == 'VECTOR':
-            return geometry_script.vector_math(operation=operation, vector=vector_or_value)
+            from .. import vector_math
+            return vector_math(operation=operation, vector=vector_or_value)
         else:
-            return geometry_script.math(operation=operation, value=vector_or_value)
+            from .. import math
+            return math(operation=operation, value=vector_or_value)
 
     def __add__(self, other):
         return self._math(other, 'ADD')
@@ -137,7 +139,8 @@ class Type(metaclass=_TypeMeta):
         return self._math(None,'ROUND')
     
     def _compare(self, other, operation):
-        return geometry_script.compare(operation=operation, a=self, b=other)
+        from .. import compare
+        return compare(operation=operation, a=self, b=other)
     
     def __eq__(self, other):
         if self._socket.type == 'BOOLEAN':
@@ -255,23 +258,26 @@ class Type(metaclass=_TypeMeta):
             value = accessor
         match sample_mode:
             case SampleMode.INDEX:
+                from .. import index
                 return self.sample_index(
                     data_type=data_type,
                     domain=domain,
                     value=value,
-                    index=sampling_index or geometry_script.index()
+                    index=sampling_index or index()
                 )
             case SampleMode.NEAREST_SURFACE:
+                from .. import position
                 return self.sample_nearest_surface(
                     data_type=data_type,
                     value=value,
-                    sample_position=sample_position or geometry_script.position()
+                    sample_position=sample_position or position()
                 )
             case SampleMode.NEAREST:
+                from .. import position
                 return self.sample_index(
                     data_type=data_type,
                     value=value,
-                    index=self.sample_nearest(domain=domain, sample_position=sample_position or geometry_script.position())
+                    index=self.sample_nearest(domain=domain, sample_position=sample_position or position())
                 )
 
 for standard_socket in list(filter(lambda x: 'NodeSocket' in x, dir(bpy.types))):
