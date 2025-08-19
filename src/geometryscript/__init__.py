@@ -1,7 +1,7 @@
 """
 Geometry Script - A Python API for Blender's Geometry Nodes
 
-A scripting API for creating Geometry Nodes with code, providing all the 
+A scripting API for creating Geometry Nodes with code, providing all the
 performance and capabilities of Geometry Nodes in a more manageable format.
 """
 

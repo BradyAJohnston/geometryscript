@@ -1,10 +1,12 @@
 from typing import List
 import enum
 
+
 class HandleType(enum.Enum):
-    AUTO = 'AUTO'
-    VECTOR = 'VECTOR'
-    AUTO_CLAMPED = 'AUTO_CLAMPED'
+    AUTO = "AUTO"
+    VECTOR = "VECTOR"
+    AUTO_CLAMPED = "AUTO_CLAMPED"
+
 
 class Point:
     """
@@ -19,6 +21,7 @@ class Point:
         self.x = x
         self.y = y
         self.handle_type = handle_type
+
 
 class Curve:
     """

@@ -1,5 +1,6 @@
 import os
 
+
 def absolute_path(component):
     """
     Returns the absolute path to a file in the addon directory.

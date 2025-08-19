@@ -6,50 +6,59 @@ from .state import State
 from .static.sample_mode import SampleMode
 # Avoid circular import - will be imported later when needed
 
+
 def map_case_name(i):
-    return ('_' if not i.identifier[0].isalpha() else '') + i.identifier.replace(' ', '_').upper()
+    return ("_" if not i.identifier[0].isalpha() else "") + i.identifier.replace(
+        " ", "_"
+    ).upper()
+
 
 def socket_type_to_data_type(socket_type):
     match socket_type:
-        case 'VALUE':
-            return 'FLOAT'
-        case 'VECTOR':
-            return 'FLOAT_VECTOR'
-        case 'COLOR':
-            return 'FLOAT_COLOR'
+        case "VALUE":
+            return "FLOAT"
+        case "VECTOR":
+            return "FLOAT_VECTOR"
+        case "COLOR":
+            return "FLOAT_COLOR"
         case _:
             return socket_type
 
+
 def socket_class_to_data_type(socket_class_name):
     match socket_class_name:
-        case 'NodeSocketGeometry':
-            return 'GEOMETRY'
-        case 'NodeSocketFloat':
-            return 'FLOAT'
+        case "NodeSocketGeometry":
+            return "GEOMETRY"
+        case "NodeSocketFloat":
+            return "FLOAT"
         case _:
             return socket_class_name
+
 
 # The base class all exposed socket types conform to.
 class _TypeMeta(type):
     def __getitem__(self, args):
         for s in filter(lambda x: isinstance(x, slice), args):
-            if (isinstance(s.start, float) or isinstance(s.start, int)) and (isinstance(s.stop, float) or isinstance(s.stop, int)):
+            if (isinstance(s.start, float) or isinstance(s.start, int)) and (
+                isinstance(s.stop, float) or isinstance(s.stop, int)
+            ):
                 print(f"minmax: ({s.start}, {s.stop})")
             elif isinstance(s.start, str):
                 print(f"{s.start} = {s.stop}")
         return self
 
+
 class Type(metaclass=_TypeMeta):
     socket_type: str
 
-    def __init__(self, socket: bpy.types.NodeSocket = None, value = None):
+    def __init__(self, socket: bpy.types.NodeSocket = None, value=None):
         if value is not None:
             input_nodes = {
-                int: ('FunctionNodeInputInt', 'integer'),
-                bool: ('FunctionNodeInputBool', 'boolean'),
-                str: ('FunctionNodeInputString', 'string'),
-                tuple: ('FunctionNodeInputVector', 'vector'),
-                float: ('ShaderNodeValue', None),
+                int: ("FunctionNodeInputInt", "integer"),
+                bool: ("FunctionNodeInputBool", "boolean"),
+                str: ("FunctionNodeInputString", "string"),
+                tuple: ("FunctionNodeInputVector", "vector"),
+                float: ("ShaderNodeValue", None),
             }
             if type(value) == int:
                 print("Making an integer node?")
@@ -64,110 +73,113 @@ class Type(metaclass=_TypeMeta):
             socket = value_node.outputs[0]
         self._socket = socket
         self.socket_type = type(socket).__name__
-    
+
     def _math(self, other, operation, reverse=False):
         if other is None:
             vector_or_value = self
         else:
-            vector_or_value =  (other, self) if reverse else (self, other)
+            vector_or_value = (other, self) if reverse else (self, other)
 
-        if self._socket.type == 'VECTOR':
+        if self._socket.type == "VECTOR":
             from .. import vector_math
+
             return vector_math(operation=operation, vector=vector_or_value)
         else:
             from .. import math
+
             return math(operation=operation, value=vector_or_value)
 
     def __add__(self, other):
-        return self._math(other, 'ADD')
-    
+        return self._math(other, "ADD")
+
     def __radd__(self, other):
-        return self._math(other, 'ADD', True)
-    
+        return self._math(other, "ADD", True)
+
     def __sub__(self, other):
-        return self._math(other, 'SUBTRACT')
-    
+        return self._math(other, "SUBTRACT")
+
     def __rsub__(self, other):
-        return self._math(other, 'SUBTRACT', True)
-    
+        return self._math(other, "SUBTRACT", True)
+
     def __mul__(self, other):
-        return self._math(other, 'MULTIPLY')
-    
+        return self._math(other, "MULTIPLY")
+
     def __rmul__(self, other):
-        return self._math(other, 'MULTIPLY', True)
-    
+        return self._math(other, "MULTIPLY", True)
+
     def __truediv__(self, other):
-        return self._math(other, 'DIVIDE')
-    
+        return self._math(other, "DIVIDE")
+
     def __rtruediv__(self, other):
-        return self._math(other, 'DIVIDE', True)
-    
+        return self._math(other, "DIVIDE", True)
+
     def __mod__(self, other):
-        return self._math(other, 'MODULO')
-    
+        return self._math(other, "MODULO")
+
     def __rmod__(self, other):
-        return self._math(other, 'MODULO', True)
-    
+        return self._math(other, "MODULO", True)
+
     def __floordiv__(self, other):
-        return self._math(other, 'DIVIDE')._math(None,'FLOOR')
-    
+        return self._math(other, "DIVIDE")._math(None, "FLOOR")
+
     def __rfloordiv__(self, other):
-        return self._math(other, 'DIVIDE',True)._math(None,'FLOOR')
-    
+        return self._math(other, "DIVIDE", True)._math(None, "FLOOR")
+
     def __pow__(self, other):
-        return self._math(other, 'POWER')
-    
+        return self._math(other, "POWER")
+
     def __rpow__(self, other):
-        return self._math(other, 'POWER', True)
-    
+        return self._math(other, "POWER", True)
+
     def __matmul__(self, other):
-        return self._math(other, 'DOT_PRODUCT')
-    
+        return self._math(other, "DOT_PRODUCT")
+
     def __rmatmul__(self, other):
-        return self._math(other, 'DOT_PRODUCT', True)
-    
+        return self._math(other, "DOT_PRODUCT", True)
+
     def __abs__(self):
-        return self._math(None,'ABSOLUTE')
-    
+        return self._math(None, "ABSOLUTE")
+
     def __neg__(self):
-        return self._math(-1, 'MULTIPLY')
+        return self._math(-1, "MULTIPLY")
 
     def __pos__(self):
         return self
-    
+
     def __round__(self):
-        return self._math(None,'ROUND')
-    
+        return self._math(None, "ROUND")
+
     def _compare(self, other, operation):
         from .. import compare
+
         return compare(operation=operation, a=self, b=other)
-    
+
     def __eq__(self, other):
-        if self._socket.type == 'BOOLEAN':
-            return self._boolean_math(other, 'XNOR')
+        if self._socket.type == "BOOLEAN":
+            return self._boolean_math(other, "XNOR")
         else:
-            return self._compare(other, 'EQUAL')
-    
+            return self._compare(other, "EQUAL")
+
     def __ne__(self, other):
-        if self._socket.type == 'BOOLEAN':
-            return self._boolean_math(other, 'XOR')
+        if self._socket.type == "BOOLEAN":
+            return self._boolean_math(other, "XOR")
         else:
-            return self._compare(other, 'NOT_EQUAL')
-    
+            return self._compare(other, "NOT_EQUAL")
+
     def __lt__(self, other):
-        return self._compare(other, 'LESS_THAN')
-    
+        return self._compare(other, "LESS_THAN")
+
     def __le__(self, other):
-        return self._compare(other, 'LESS_EQUAL')
-    
+        return self._compare(other, "LESS_EQUAL")
+
     def __gt__(self, other):
-        return self._compare(other, 'GREATER_THAN')
-    
+        return self._compare(other, "GREATER_THAN")
+
     def __ge__(self, other):
-        return self._compare(other, 'GREATER_EQUAL')
-    
+        return self._compare(other, "GREATER_EQUAL")
+
     def _boolean_math(self, other, operation, reverse=False):
-        boolean_math_node = State.current_node_tree.nodes.new('FunctionNodeBooleanMath')
+        boolean_math_node = State.current_node_tree.nodes.new("FunctionNodeBooleanMath")
         boolean_math_node.operation = operation
         a = None
         b = None
@@ -185,51 +197,61 @@ class Type(metaclass=_TypeMeta):
             else:
                 b.default_value = other
         return Type(boolean_math_node.outputs[0])
-    
+
     def __and__(self, other):
-        return self._boolean_math(other, 'AND')
+        return self._boolean_math(other, "AND")
 
     def __rand__(self, other):
-        return self._boolean_math(other, 'AND', reverse=True)
-    
+        return self._boolean_math(other, "AND", reverse=True)
+
     def __or__(self, other):
-        return self._boolean_math(other, 'OR')
-    
+        return self._boolean_math(other, "OR")
+
     def __ror__(self, other):
-        return self._boolean_math(other, 'OR', reverse=True)
-    
+        return self._boolean_math(other, "OR", reverse=True)
+
     def __invert__(self):
-        if self._socket.type == 'BOOLEAN':
-            return self._boolean_math(None, 'NOT')
+        if self._socket.type == "BOOLEAN":
+            return self._boolean_math(None, "NOT")
         else:
-            return self._math((-1, -1, -1) if self._socket.type == 'VECTOR' else -1, 'MULTIPLY')
-    
+            return self._math(
+                (-1, -1, -1) if self._socket.type == "VECTOR" else -1, "MULTIPLY"
+            )
+
     def _get_xyz_component(self, component):
-        if self._socket.type != 'VECTOR':
-            raise Exception("`x`, `y`, `z` properties are not available on non-Vector types.")
-        separate_node = State.current_node_tree.nodes.new('ShaderNodeSeparateXYZ')
+        if self._socket.type != "VECTOR":
+            raise Exception(
+                "`x`, `y`, `z` properties are not available on non-Vector types."
+            )
+        separate_node = State.current_node_tree.nodes.new("ShaderNodeSeparateXYZ")
         State.current_node_tree.links.new(self._socket, separate_node.inputs[0])
         return Type(separate_node.outputs[component])
+
     @property
     def x(self):
         return self._get_xyz_component(0)
+
     @property
     def y(self):
         return self._get_xyz_component(1)
+
     @property
     def z(self):
         return self._get_xyz_component(2)
-    
+
     def capture(self, value, **kwargs):
         data_type = socket_type_to_data_type(value._socket.type)
         res = self.capture_attribute(data_type=data_type, value=value, **kwargs)
         return res.geometry, res.attribute
+
     def transfer(self, attribute, **kwargs):
         data_type = socket_type_to_data_type(attribute._socket.type)
-        return self.transfer_attribute(data_type=data_type, attribute=attribute, **kwargs)
-    
+        return self.transfer_attribute(
+            data_type=data_type, attribute=attribute, **kwargs
+        )
+
     def __getitem__(self, subscript):
-        if self._socket.type == 'VECTOR' and isinstance(subscript, int):
+        if self._socket.type == "VECTOR" and isinstance(subscript, int):
             return self._get_xyz_component(subscript)
         if isinstance(subscript, tuple):
             accessor = subscript[0]
@@ -238,7 +260,11 @@ class Type(metaclass=_TypeMeta):
             accessor = subscript
             args = []
         sample_mode = SampleMode.INDEX if len(args) < 1 else args[0]
-        domain = 'POINT' if len(args) < 2 else (args[1].value if isinstance(args[1], enum.Enum) else args[1])
+        domain = (
+            "POINT"
+            if len(args) < 2
+            else (args[1].value if isinstance(args[1], enum.Enum) else args[1])
+        )
         sample_position = None
         sampling_index = None
         if isinstance(accessor, slice):
@@ -252,51 +278,68 @@ class Type(metaclass=_TypeMeta):
                 case SampleMode.NEAREST:
                     sample_position = accessor.stop
             if accessor.step is not None:
-                domain = accessor.step.value if isinstance(accessor.step, enum.Enum) else accessor.step
+                domain = (
+                    accessor.step.value
+                    if isinstance(accessor.step, enum.Enum)
+                    else accessor.step
+                )
         else:
             data_type = socket_type_to_data_type(accessor._socket.type)
             value = accessor
         match sample_mode:
             case SampleMode.INDEX:
                 from .. import index
+
                 return self.sample_index(
                     data_type=data_type,
                     domain=domain,
                     value=value,
-                    index=sampling_index or index()
+                    index=sampling_index or index(),
                 )
             case SampleMode.NEAREST_SURFACE:
                 from .. import position
+
                 return self.sample_nearest_surface(
                     data_type=data_type,
                     value=value,
-                    sample_position=sample_position or position()
+                    sample_position=sample_position or position(),
                 )
             case SampleMode.NEAREST:
                 from .. import position
+
                 return self.sample_index(
                     data_type=data_type,
                     value=value,
-                    index=self.sample_nearest(domain=domain, sample_position=sample_position or position())
+                    index=self.sample_nearest(
+                        domain=domain, sample_position=sample_position or position()
+                    ),
                 )
 
-for standard_socket in list(filter(lambda x: 'NodeSocket' in x, dir(bpy.types))):
-    name = standard_socket.replace('NodeSocket', '')
+
+for standard_socket in list(filter(lambda x: "NodeSocket" in x, dir(bpy.types))):
+    name = standard_socket.replace("NodeSocket", "")
     if len(name) < 1:
         continue
-    globals()[name] = type(name, (Type,), { 'socket_type': standard_socket, '__module__': Type.__module__ })
-    if name == 'Int':
+    globals()[name] = type(
+        name, (Type,), {"socket_type": standard_socket, "__module__": Type.__module__}
+    )
+    if name == "Int":
+
         class IntIterator:
             def __init__(self, integer):
                 self.integer = integer
-                self.points = State.current_node_tree.nodes.new('GeometryNodePoints')
-                State.current_node_tree.links.new(self.integer._socket, self.points.inputs[0])
-                self.index = State.current_node_tree.nodes.new('GeometryNodeInputIndex')
+                self.points = State.current_node_tree.nodes.new("GeometryNodePoints")
+                State.current_node_tree.links.new(
+                    self.integer._socket, self.points.inputs[0]
+                )
+                self.index = State.current_node_tree.nodes.new("GeometryNodeInputIndex")
                 self._did_iterate = False
+
             def __next__(self):
                 if not self._did_iterate:
                     self._did_iterate = True
                     return Type(self.index.outputs[0]), Type(self.points.outputs[0])
                 else:
                     raise StopIteration()
+
         globals()[name].__iter__ = lambda self: IntIterator(self)

@@ -26,15 +26,16 @@ class Attribute:
     selection = height_level.exists()
     ```
     """
+
     name: str
-    data_type: 'NamedAttribute.DataType'
-    domain: 'StoreNamedAttribute.Domain'
+    data_type: "NamedAttribute.DataType"
+    domain: "StoreNamedAttribute.Domain"
 
     def __init__(
         self,
         name: str,
-        data_type: 'NamedAttribute.DataType',
-        domain: 'StoreNamedAttribute.Domain' = 'POINT'
+        data_type: "NamedAttribute.DataType",
+        domain: "StoreNamedAttribute.Domain" = "POINT",
     ):
         self.name = name
         self.data_type = data_type
@@ -46,13 +47,16 @@ class Attribute:
         """
         from ... import named_attribute
         from ...api.types import Type
-        result = named_attribute(data_type=self.data_type, name=self.name, *args, **kwargs)
+
+        result = named_attribute(
+            data_type=self.data_type, name=self.name, *args, **kwargs
+        )
         # Handle Blender 3.5+, which includes an `exists` result.
         if isinstance(result, Type):
             return result
         else:
             return result.attribute
-    
+
     def exists(self, *args, **kwargs):
         """
         Creates a "Named Attribute" node with the correct arguments passed, and returns the "Exists" socket.
@@ -60,20 +64,24 @@ class Attribute:
         > Only available in Blender 3.5+
         """
         from ... import named_attribute
-        return named_attribute(data_type=self.data_type, name=self.name, *args, **kwargs).exists
-    
-    def store(self, geometry: 'Geometry', value, *args, **kwargs) -> 'Geometry':
+
+        return named_attribute(
+            data_type=self.data_type, name=self.name, *args, **kwargs
+        ).exists
+
+    def store(self, geometry: "Geometry", value, *args, **kwargs) -> "Geometry":
         """
         Creates a "Store Named Attribute" node with the correct arguments passed, and returns the modified `Geometry`.
         """
         from ... import store_named_attribute
-        if 'domain' not in kwargs:
-            kwargs['domain'] = self.domain
+
+        if "domain" not in kwargs:
+            kwargs["domain"] = self.domain
         return store_named_attribute(
             data_type=self.data_type,
             geometry=geometry,
             name=self.name,
             value=value,
             *args,
-            **kwargs
+            **kwargs,
         )
