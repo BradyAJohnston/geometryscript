@@ -470,8 +470,7 @@ def initialize_node_mapper() -> None:
     _discover_and_register_node_types()
 
 
-# Initialize on module load
-initialize_node_mapper()
-
-# For backwards compatibility and easy calling
-bpy.app.timers.register(create_type_stubs)
+def setup_types() -> None:
+    """Setup types by creating type stubs."""
+    initialize_node_mapper()
+    create_type_stubs()
